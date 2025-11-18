@@ -52,7 +52,8 @@ The system uses a **client–server architecture**:
 
 ## 2. ER Diagram
 
-The full ERD is available here: [ER Diagram](ER-diagram.pdf)
+<img width="861" height="757" alt="image" src="https://github.com/user-attachments/assets/6f5a6282-1a17-4eba-b7f8-f2ba068e4e71" />
+
 
 ---
 
