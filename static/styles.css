@@ -1,0 +1,298 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background-color: #121212;
+    color: #f5f5f5;
+    padding: 0;
+}
+
+.top-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid #333;
+    position: sticky;
+    top: 0;
+    background-color: #121212;
+    z-index: 10;
+}
+
+.logo {
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+
+.top-nav a {
+    margin-left: 16px;
+    text-decoration: none;
+    color: #aaa;
+    font-size: 0.95rem;
+}
+
+.top-nav a.active,
+.top-nav a:hover {
+    color: #1db954; /* Spotify green-ish */
+}
+
+/* MAIN LAYOUT */
+
+.profile-layout {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr) 260px;
+    gap: 16px;
+    padding: 16px 24px;
+}
+
+.profile-column {
+    align-self: flex-start;
+}
+
+/* Cards are sections for pieces of info in the frontend, use em to group stuff up*/
+
+.card {
+    background-color: #181818;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 0 0 1px #222;
+}
+
+/*PROFILE*/
+
+.profile-card {
+    text-align: left;
+}
+
+.avatar {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    display: block;
+    margin-bottom: 12px;
+}
+
+.avatar.small {
+    width: 40px;
+    height: 40px;
+}
+
+.username {
+    color: #aaa;
+    margin-bottom: 12px;
+}
+
+.stats {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.stat-number {
+    font-weight: 600;
+    display: block;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: #aaa;
+}
+
+.bio {
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+}
+
+h3 {
+    margin-top: 12px;
+    margin-bottom: 6px;
+    font-size: 0.95rem;
+}
+
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.chip {
+    background-color: #282828;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+}
+
+.simple-list {
+    list-style: none;
+    font-size: 0.9rem;
+}
+
+.simple-list li + li {
+    margin-top: 4px;
+}
+
+.add-friend-btn {
+    background-color: #1db954;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 16px;
+    color: #121212;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/*POSTS*/
+
+.post-card {
+    background-color: #181818;
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 16px;
+    box-shadow: 0 0 0 1px #222;
+}
+
+.post-top-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.post-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #333;
+}
+
+.post-caption {
+    font-size: 0.95rem;
+}
+
+.post-main {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 12px;
+}
+
+.post-album-art {
+    width: 140px;
+    height: 140px;
+    border-radius: 6px;
+    background-color: #333;
+}
+
+.post-track-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.track-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.track-artist {
+    color: #aaa;
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+}
+
+.post-audio {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.play-btn {
+    border: none;
+    background-color: #282828;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 0.9rem;
+    cursor: pointer;
+    color: #fff;
+}
+
+.play-btn:hover {
+    background-color: #333;
+}
+
+.audio-bar {
+    flex-grow: 1;
+    height: 6px;
+    background-color: #333;
+    border-radius: 4px;
+    position: relative;
+}
+
+.audio-bar::after {
+    content: "";
+    position: absolute;
+    height: 6px;
+    width: 40%;
+    background-color: #1db954;
+    border-radius: 4px;
+}
+
+.post-footer {
+    display: flex;
+    gap: 16px;
+    margin-top: 10px;
+}
+
+.like-btn, .comment-btn {
+    border: none;
+    background: none;
+    color: #aaa;
+}
+
+.post-action {
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.post-action:hover {
+    opacity: 0.7;
+}
+
+/*PLAYLISTS*/
+
+.playlists-card h2 {
+    margin-bottom: 12px;
+    font-size: 1rem;
+}
+
+.playlist-item {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.playlist-thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    background: linear-gradient(135deg, #1db954, #3e8ed0);
+}
+
+.playlist-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.playlist-meta {
+    font-size: 0.8rem;
+    color: #aaa;
+}
+
