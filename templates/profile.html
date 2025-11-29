@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>User Profile</title>
+        <link rel="stylesheet" href="/static/styles.css">
+    </head>
+    <body>
+        <header class="top-header">
+            <div class="logo">SpotSocial</div>
+        </header>
+
+        <main class="profile-layout">
+            <!--Profile Section -->
+            <section class="profile-column profile-left">
+                <div class="card profile-card">
+                    <img class="avatar" src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Default_pfp.svg/1024px-Default_pfp.svg.png" alt="Avatar">
+                    <h2>Display Name</h2>
+                    <p class="username">@username</p>
+                    <p class="bio">This is a short bio about the user. It gives a brief introduction.</p>
+
+                    <div class="stats">
+                        <div>
+                            <strong>150</strong>
+                            <span>Friends</span>
+                        </div>
+                        <div>
+                            <strong>75</strong>
+                            <span>Posts</span>
+                        </div>
+                    </div>
+                    <button class="add-friend-btn">Add Friend</button>
+                </div>
+            </section>
+
+            <!--Posts Section -->
+            <section class="posts-column profile-middle">
+                <!--Post - Should be generated programmatically in JS after DB query-->
+                <!--This is just a placeholder so they show up have visual-->
+                <div class="post-card card">
+                    <div class="post-top-row">
+                        <img class="post-avatar" src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Default_pfp.svg/1024px-Default_pfp.svg.png" alt="Avatar">
+                        <p class="post-caption">I love this song!</p>
+                    </div>
+                    <div class="post-main">
+                    <img class="post-album-art" src="//e.snmc.io/i/300/w/6ac24fb6781f540cc9ddff6b7f88b323/8978367"/>
+
+                    <div class="post-track-info">
+                        <div class="track-title">Carry The Zero</div>
+                        <div class="track-artist">Built to Spill</div>
+
+                        <div class="post-audio">
+                            <button class="play-btn">▶️</button>
+                            <div class="audio-bar"></div>
+                        </div>
+                    </div>    
+                </div>
+                <div class="post-footer">
+                    <button class="like-btn post-action">❤️</button>
+                    <button class="comment-btn post-action">💬</button>
+                </div>
+            </section>
+
+            <!--Playlists-->
+            <section class="profile-column profile-right">
+                <div class="card playlists-card">
+                    <h3>Playlists</h3>
+
+                    <!--Playlist Items - Should be generated programmatically in JS after DB query-->
+                    <!--This is just a placeholder so they show up have visual-->
+                    <div class="playlist-item">
+                        <div class="playlist-thumb"></div> <!-- Made w/ CSS, Replace this with image thumbnail if needed -->
+                        <div>
+                            <div class="playlist-title">Chill Vibes</div>
+                            <div class="playlist-info">25 songs • Lo-fi</div>
+                        </div>
+                    </div>
+
+                    <div class="playlist-item">
+                        <div class="playlist-thumb"></div>
+                        <div>
+                            <div class="playlist-title">Workout Mix</div>
+                            <div class="playlist-info">40 songs • Upbeat</div>
+                        </div>
+                    </div>
+
+                    <div class="playlist-item">
+                        <div class="playlist-thumb"></div> 
+                        <div>
+                            <div class="playlist-title">Top Hits 2024</div>
+                            <div class="playlist-info">50 songs • Pop</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </body>
+</html>
