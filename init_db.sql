@@ -1,5 +1,5 @@
 CREATE DATABASE SpotSocialDB;
--- Select the database you created
+
 USE SpotSocialDB;
 
 -- 1. Users Table (Account)
@@ -12,7 +12,7 @@ CREATE TABLE Users (
     Profile_Picture VARCHAR(255)
 );
 
--- 2. Tracks Table (Music Data) - Includes the required 'Year' field
+-- 2. Tracks Table (Music Data) 
 CREATE TABLE Tracks (
     Track_ID INT PRIMARY KEY,
     Name VARCHAR(255) NOT NULL,
