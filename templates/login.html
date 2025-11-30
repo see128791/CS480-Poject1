@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - SpotSocial</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="card">
+        <h2>Select user</h2>
+        <label for="user-select">Choose account</label>
+        <select id="user-select">
+            <!--Populated by JS-->
+        </select>
+
+        <div>
+            <button id="login-btn" class="add-friend-btn">
+                Login
+            </button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='login.js') }}"></script>
+</body>

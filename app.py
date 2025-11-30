@@ -335,14 +335,40 @@ def respond_friend_request():
     finally:
         cursor.close()
         conn.close()
-    
+
+# --- 8. Retrieve All Users ---
+@app.route('/users', methods=['GET'])
+def get_all_user_ids():
+    conn = get_db_connection()
+    if conn is None:
+        return jsonify({'message': 'Server error: Could not connect to database'}), 500
+
+    cursor = conn.cursor(dictionary=True)
+    query = "SELECT User_ID, Username FROM Users"
+
+    try:
+        cursor.execute(query)
+        users = cursor.fetchall()
+        return jsonify(users), 200
+
+    except Exception as e:
+        return jsonify({'message': f'An unexpected error occurred: {e}'}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
 @app.get('/')
 def home():
-    return "Welcome to the Home Page!"
+    return render_template('login.html')
 
 @app.get('/profile')
 def profile():
     return render_template('profile.html')
 
+@app.get('/login')
+def login():
+    return render_template('login.html')
+
 if __name__ == '__main__':
     app.run(debug=True)
+    
