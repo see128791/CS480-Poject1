@@ -382,3 +382,7 @@ h3 {
     justify-content: flex-start;
     padding: 5px 0;
 }
+
+.no-link-color {
+    color: #ffff;
+}
