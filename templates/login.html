@@ -2,24 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - SpotSocial</title>
-    <link rel="stylesheet" href="/static/styles.css">
+    <title>Login</title>
 </head>
 <body>
-    <div class="card">
-        <h2>Select user</h2>
-        <label for="user-select">Choose account</label>
-        <select id="user-select">
-            <!--Populated by JS-->
-        </select>
+    <h1>Log In</h1>
 
-        <div>
-            <button id="login-btn" class="add-friend-btn">
-                Login
-            </button>
-        </div>
-    </div>
+    {% if error %}
+        <p style="color:red;">{{ error }}</p>
+    {% endif %}
 
-    <script src="{{ url_for('static', filename='login.js') }}"></script>
+    <form method="POST" action="/login">
+        <label>Username:</label>
+        <input type="text" name="username" required><br><br>
+
+        <label>Password:</label>
+        <input type="password" name="password" required><br><br>
+
+        <button type="submit">Log In</button>
+    </form>
+
+    <p>No account yet? <a href="/signup">Sign up here</a></p>
 </body>
+</html>

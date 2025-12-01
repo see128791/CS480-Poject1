@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Profile – SpotSocial</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<header class="top-header">
+    <div class="logo">SpotSocial</div>
+    <nav class="top-nav">
+        <a href="/feed">Feed</a>
+        <a href="/profile" class="active">Profile</a>
+        <a href="/login">Login</a>
+    </nav>
+</header>
+
+<main class="profile-layout">
+    <section class="profile-column profile-left">
+        <div class="card profile-card">
+            <h2>Edit Profile</h2>
+
+            {% if error %}
+                <p style="color:#ff6b6b; margin-bottom:8px;">{{ error }}</p>
+            {% endif %}
+
+            <form method="POST" action="/profile/edit">
+                <div style="margin-bottom:10px;">
+                    <label for="display_name">Display Name</label><br>
+                    <input type="text"
+                           id="display_name"
+                           name="display_name"
+                           value="{{ user.Display_Name or '' }}"
+                           style="width:100%; padding:6px; margin-top:4px;">
+                </div>
+
+                <div style="margin-bottom:10px;">
+                    <label for="bio">Bio</label><br>
+                    <textarea id="bio"
+                              name="bio"
+                              rows="3"
+                              style="width:100%; padding:6px; margin-top:4px;">{{ user.Bio or '' }}</textarea>
+                </div>
+
+                <div style="margin-bottom:10px;">
+                    <label for="profile_picture">Profile Picture URL</label><br>
+                    <input type="text"
+                           id="profile_picture"
+                           name="profile_picture"
+                           value="{{ user.Profile_Picture or '' }}"
+                           style="width:100%; padding:6px; margin-top:4px;">
+                </div>
+
+                <button type="submit" class="add-friend-btn" style="margin-top:8px;">
+                    Save Changes
+                </button>
+                <a href="/profile"
+                   style="margin-left:8px; color:#aaa; font-size:0.9rem; text-decoration:none;">
+                    Cancel
+                </a>
+            </form>
+        </div>
+    </section>
+
+    <section class="posts-column profile-middle"></section>
+    <section class="profile-column profile-right"></section>
+</main>
+</body>
+</html>

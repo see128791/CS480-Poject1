@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SpotSocial Feed</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<header class="top-header">
+    <div class="logo">SpotSocial</div>
+    <nav class="top-nav">
+        <a href="/feed" class="active">Feed</a>
+        <a href="/profile">Profile</a>
+        <a href="/login">Logout</a>
+    </nav>
+</header>
+
+<main class="profile-layout">
+    <section class="posts-column profile-middle">
+        <div class="card" style="margin-bottom:16px;">
+            <h3>Create a Post</h3>
+            <div style="margin-bottom:8px;">
+                <label>Search Track:</label>
+                <input type="text" id="track-search-input"
+                       placeholder="Type song or artist..." style="width:70%;">
+                <button id="track-search-btn">Search</button>
+            </div>
+
+            <div id="track-search-results"
+                 style="max-height:150px; overflow-y:auto; margin-bottom:8px; font-size:0.9rem;">
+            </div>
+
+            <div style="margin-bottom:8px;">
+                <label>Caption:</label><br>
+                <textarea id="post-caption-input" rows="2" style="width:100%;"></textarea>
+            </div>
+
+            <button id="create-post-btn">Post</button>
+        </div>
+
+        {% if posts %}
+            {% for post in posts %}
+                <div class="post-card card">
+                    <div class="post-top-row">
+                        <img class="post-avatar"
+                             src="{{ post.Profile_Picture or 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Default_pfp.svg/1024px-Default_pfp.svg.png' }}"
+                             alt="Avatar">
+                        <p class="post-caption">
+                            <strong>{{ post.Display_Name or post.Username }}</strong>:
+                            {{ post.Caption }}
+                        </p>
+                    </div>
+
+                    <div class="post-main">
+                        <img class="post-album-art"
+                             src="{{ post.Cover_Image }}"
+                             alt="Album Art">
+
+                        <div class="post-track-info">
+                            <div class="track-title">{{ post.Track_Name }}</div>
+                            <div class="track-artist">{{ post.Artist }}</div>
+
+                            <div class="post-audio">
+                                <button class="play-btn">▶️</button>
+                                <div class="audio-bar"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="post-footer">
+                        <button class="like-btn post-action" data-post-id="{{ post.Post_ID }}">❤️</button>
+                        <span class="like-count" data-post-id="{{ post.Post_ID }}">
+                            {{ post.Like_Count or 0 }}
+                        </span>
+
+                        <button class="comment-btn post-action" data-post-id="{{ post.Post_ID }}">💬</button>
+                        <span class="comment-count" data-post-id="{{ post.Post_ID }}">
+                            {{ post.Comment_Count or 0 }}
+                        </span>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No posts in your feed yet.</p>
+        {% endif %}
+    </section>
+
+    <section class="profile-column profile-left"></section>
+    <section class="profile-column profile-right"></section>
+</main>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('track-search-input');
+    const searchBtn = document.getElementById('track-search-btn');
+    const resultsDiv = document.getElementById('track-search-results');
+    const captionInput = document.getElementById('post-caption-input');
+    const createPostBtn = document.getElementById('create-post-btn');
+
+    let selectedTrackId = null;
+    const USER_ID = {{ user_id|tojson }};
+
+    searchBtn.addEventListener('click', async () => {
+        const q = searchInput.value.trim();
+        if (!q) {
+            alert('Please enter a search term.');
+            return;
+        }
+        try {
+            const res = await fetch(`/tracks/search?q=${encodeURIComponent(q)}`);
+            const data = await res.json();
+            resultsDiv.innerHTML = '';
+            if (!Array.isArray(data) || data.length === 0) {
+                resultsDiv.innerHTML = '<p>No tracks found.</p>';
+                return;
+            }
+            data.forEach(track => {
+                const div = document.createElement('div');
+                div.style.padding = '4px 0';
+                div.style.cursor = 'pointer';
+                div.textContent = `${track.Name} — ${track.Artist}`;
+                div.dataset.trackId = track.Track_ID;
+                div.addEventListener('click', () => {
+                    selectedTrackId = track.Track_ID;
+                    Array.from(resultsDiv.children).forEach(child => {
+                        child.style.backgroundColor = '';
+                    });
+                    div.style.backgroundColor = '#222';
+                });
+                resultsDiv.appendChild(div);
+            });
+        } catch (err) {
+            console.error(err);
+            alert('Error searching tracks.');
+        }
+    });
+
+    createPostBtn.addEventListener('click', async () => {
+        if (!selectedTrackId) {
+            alert('Please select a track first.');
+            return;
+        }
+        const caption = captionInput.value.trim();
+        try {
+            const res = await fetch('/posts', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    user_id: USER_ID,
+                    track_id: selectedTrackId,
+                    caption: caption
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                alert(data.message || 'Error creating post.');
+                return;
+            }
+            alert('Post created!');
+            window.location.reload();
+        } catch (err) {
+            console.error(err);
+            alert('Error creating post.');
+        }
+    });
+
+    document.querySelectorAll('.like-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const postId = btn.getAttribute('data-post-id');
+            if (!postId) return;
+            try {
+                const res = await fetch(`/posts/${postId}/like`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({})
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    alert(data.message || 'Error toggling like.');
+                    return;
+                }
+                const countSpan = document.querySelector(
+                    `.like-count[data-post-id="${postId}"]`
+                );
+                if (countSpan) {
+                    countSpan.textContent = data.like_count;
+                }
+                if (data.liked) {
+                    btn.classList.add('liked');
+                } else {
+                    btn.classList.remove('liked');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error toggling like.');
+            }
+        });
+    });
+
+    document.querySelectorAll('.comment-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const postId = btn.getAttribute('data-post-id');
+            if (!postId) return;
+            const text = prompt('Enter your comment:');
+            if (!text || !text.trim()) return;
+            try {
+                const res = await fetch(`/posts/${postId}/comments`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ comment: text.trim() })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    alert(data.message || 'Error adding comment.');
+                    return;
+                }
+                const countSpan = document.querySelector(
+                    `.comment-count[data-post-id="${postId}"]`
+                );
+                if (countSpan) {
+                    countSpan.textContent = data.comment_count;
+                }
+                try {
+                    const resList = await fetch(`/posts/${postId}/comments`);
+                    const list = await resList.json();
+                    if (Array.isArray(list) && list.length > 0) {
+                        const lines = list.map(c =>
+                            `${c.Display_Name || c.Username}: ${c.Comment}`
+                        );
+                        alert('Comments:\n' + lines.join('\n'));
+                    }
+                } catch (e) {
+                    console.error('Error fetching comment list', e);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error adding comment.');
+            }
+        });
+    });
+});
+</script>
+</body>
+</html>

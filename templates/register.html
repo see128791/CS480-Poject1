@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign Up</title>
+</head>
+<body>
+    <h1>Sign Up</h1>
+
+    <form id="signup-form">
+        <label>
+            Username:
+            <input type="text" id="username" required>
+        </label>
+        <br><br>
+
+        <label>
+            Password:
+            <input type="password" id="password" required>
+        </label>
+        <br><br>
+
+        <label>
+            Display Name:
+            <input type="text" id="display_name" required>
+        </label>
+        <br><br>
+
+        <button type="submit">Register</button>
+    </form>
+
+    <p id="result"></p>
+
+    <script>
+        const form = document.getElementById('signup-form');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const body = {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value,
+                display_name: document.getElementById('display_name').value
+            };
+
+            const res = await fetch('/register', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(body)
+            });
+
+            const data = await res.json();
+            document.getElementById('result').textContent =
+                data.message || JSON.stringify(data);
+        });
+    </script>
+</body>
+</html>
