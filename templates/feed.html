@@ -79,6 +79,18 @@
                             {{ post.Comment_Count or 0 }}
                         </span>
                     </div>
+
+                    <div class="comments-container"
+                         data-post-id="{{ post.Post_ID }}"
+                         style="display:none; margin-top:8px; font-size:0.85rem;">
+                        <div class="comments-list"></div>
+                        <div class="comment-form" style="margin-top:6px; display:flex; gap:6px;">
+                            <input type="text" class="comment-input"
+                                   placeholder="Write a comment..."
+                                   style="flex:1; padding:4px 6px;">
+                            <button class="comment-submit-btn">Post</button>
+                        </div>
+                    </div>
                 </div>
             {% endfor %}
         {% else %}
@@ -198,43 +210,85 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // ---------- COMMENTS ----------
+
     document.querySelectorAll('.comment-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
             const postId = btn.getAttribute('data-post-id');
-            if (!postId) return;
-            const text = prompt('Enter your comment:');
-            if (!text || !text.trim()) return;
+            const container = document.querySelector(
+                `.comments-container[data-post-id="${postId}"]`
+            );
+            if (!container) return;
+
+            if (container.style.display === 'none' || container.style.display === '') {
+                container.style.display = 'block';
+                await loadComments(postId, container);
+            } else {
+                container.style.display = 'none';
+            }
+        });
+    });
+
+    async function loadComments(postId, container) {
+        try {
+            const res = await fetch(`/posts/${postId}/comments`);
+            const data = await res.json();
+
+            const comments = Array.isArray(data) ? data : (data.comments || []);
+            const count = Array.isArray(data)
+                ? comments.length
+                : (typeof data.comment_count === 'number' ? data.comment_count : comments.length);
+
+            const listDiv = container.querySelector('.comments-list');
+            listDiv.innerHTML = '';
+
+            if (comments.length > 0) {
+                comments.forEach(c => {
+                    const p = document.createElement('p');
+                    p.textContent = `${c.Display_Name || c.Username}: ${c.Comment}`;
+                    listDiv.appendChild(p);
+                });
+            } else {
+                const p = document.createElement('p');
+                p.textContent = 'No comments yet.';
+                listDiv.appendChild(p);
+            }
+
+            const countSpan = document.querySelector(
+                `.comment-count[data-post-id="${postId}"]`
+            );
+            if (countSpan) {
+                countSpan.textContent = count;
+            }
+        } catch (err) {
+            console.error('Error loading comments', err);
+        }
+    }
+
+    document.querySelectorAll('.comments-container').forEach(container => {
+        const postId = container.getAttribute('data-post-id');
+        const input = container.querySelector('.comment-input');
+        const btn = container.querySelector('.comment-submit-btn');
+        if (!input || !btn) return;
+
+        btn.addEventListener('click', async () => {
+            const text = input.value.trim();
+            if (!text) return;
             try {
                 const res = await fetch(`/posts/${postId}/comments`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ comment: text.trim() })
+                    body: JSON.stringify({ comment: text })
                 });
                 const data = await res.json();
                 if (!res.ok) {
                     alert(data.message || 'Error adding comment.');
                     return;
                 }
-                const countSpan = document.querySelector(
-                    `.comment-count[data-post-id="${postId}"]`
-                );
-                if (countSpan) {
-                    countSpan.textContent = data.comment_count;
-                }
-                try {
-                    const resList = await fetch(`/posts/${postId}/comments`);
-                    const list = await resList.json();
-                    if (Array.isArray(list) && list.length > 0) {
-                        const lines = list.map(c =>
-                            `${c.Display_Name || c.Username}: ${c.Comment}`
-                        );
-                        alert('Comments:\n' + lines.join('\n'));
-                    }
-                } catch (e) {
-                    console.error('Error fetching comment list', e);
-                }
+                input.value = '';
+                await loadComments(postId, container);
             } catch (err) {
-                console.error(err);
+                console.error('Error adding comment', err);
                 alert('Error adding comment.');
             }
         });
