@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SpotSocial Feed</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<header class="top-header">
+    <div class="logo">SpotSocial</div>
+    <nav class="top-nav">
+        <a href="/playlist" class="active">Playlist</a>
+        <a href="/feed">Feed</a>
+        <a href="/profile">Profile</a>
+        <a href="/login">Logout</a>
+    </nav>
+</header>
+
+<main>
+    <section class="playlist-add">
+        <div style="margin-bottom:16px;">
+            <h3>Create a Playlist</h3>
+            <div style="margin-bottom:8px;">
+                <label>Enter a Name</label>
+                <input type="text" id="track-playlist-name"
+                       placeholder="Enter playlist name" style="width:100%;">
+            </div>
+
+            <div style="margin-bottom:8px;">
+                <label>Description:</label><br>
+                <textarea rows="2" style="width:100%;" placeholder="Enter Playlist Description" id="track-description"></textarea>
+            </div>
+
+            <div style="margin-bottom:8px;">
+                <label>Cover Image URL</label><br>
+                <input type="text" placeholder="Enter Cover Image For Playlist" style="width: 100%" id="track-cover-image">
+            </div>
+            <button id="create-playlist-btn">Create</button>
+        </div>
+    </section>
+
+    <section class="playlist-list">
+        <div>
+            <h1 class="playlist-list-title">My Playlists</h1>
+        </div>
+
+        <div id="track-playlist-list"></div>
+
+        <script>
+            playlistList = document.getElementById('track-playlist-list');
+
+            async function addPlaylistContent(playlist_id, track_id) {
+                console.log(playlist_id, track_id);
+                try {
+                    const res = await fetch('/posts/playlist/content', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        Playlist_ID: playlist_id,
+                        Track_ID: track_id
+                    })
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    alert(data.message || 'Error adding playlist.');
+                    return;
+                }
+                alert("Playlist created successfully!")
+                window.location.reload();
+                } catch (err) {
+                    console.error(err);
+                    alert('Error creating playlist.');
+                }
+            }
+
+            function createTrackCard(track) {
+                console.log(track);
+                card = document.createElement('div');
+                card.classList.add("track-card");
+
+                const image_container = document.createElement('div');
+                image_container.classList.add("track-image-container");
+
+                const track_image = document.createElement('img');
+                track_image.classList.add("track-image")
+                track_image.src = track[3];
+
+                image_container.appendChild(track_image);
+                card.appendChild(image_container);
+
+                const detail_div = document.createElement('div');
+                detail_div.classList.add("track-details");
+
+
+                track_name = document.createElement('p');
+                track_name.textContent = track[1];
+                track_name.classList.add("track-card-name")
+
+                track_year = document.createElement('p');
+                track_year.textContent = track[5];
+                track_year.classList.add("track-card-rest")
+
+                track_album = document.createElement('p');
+                track_album.textContent = track[2];
+                track_album.classList.add("track-card-rest");
+
+                track_artist = document.createElement('p');
+                track_artist.textContent = track[4];
+                track_artist.classList.add("track-card-rest")
+
+
+                detail_div.appendChild(track_name);
+                detail_div.appendChild(track_artist);
+                detail_div.appendChild(track_album);
+                detail_div.appendChild(track_year);
+                
+
+                card.appendChild(detail_div)
+                return card
+            }
+
+            async function fetchTrack(playlist_id) {
+                const response = await fetch(`/playlist/get/contents/tracks/${playlist_id}`, {
+                    METHOD: 'GET'
+                })
+                if (!response.ok) {
+                    alert(`Failed to fetch tracks for ${playlist_id}`)
+                }
+
+                const tracks = await response.json();
+                console.log(tracks)
+                return tracks;
+            }
+
+            async function fetchPlaylists() {
+                const response = await fetch("/playlist/get", {
+                    method: 'GET'
+                })
+                if (!response.ok) {
+                    alert("Failed to fetch playlists")
+                    return;
+                }
+                const playlists = await response.json();
+
+                for (const playlist of playlists) {
+                    const tracks = await fetchTrack(playlist[0]);
+                    console.log(tracks)
+
+                    const name = document.createElement('h2');
+                    name.textContent = playlist[1];
+                    name.classList.add("playlist-names");
+
+                    const addTrackButton = document.createElement('button')
+                    addTrackButton.innerText = "Add Track"
+                    addTrackButton.id = playlist[0]
+                    addTrackButton.classList.add("add-track-btn")
+                    addTrackButton.addEventListener('click', async () => {
+                        track_q = prompt("Search Track (enter name or artist):")
+                        if (!track_q) {
+                            alert('Please enter a search term.');
+                            return;
+                        }
+                        const res = await fetch(`/tracks/search?q=${encodeURIComponent(track_q)}`);
+                        const data = await res.json();
+                        if (!Array.isArray(data) || data.length === 0) {
+                            alert('No tracks found.');
+                            return;
+                        }
+                        tracks_s = "";
+                        const id_set = new Set();
+                        for (const track of data) {
+                            tracks_s += `${track.Track_ID}. ${track.Name} ${track.Album} ${track.Year} \n`
+                            id_set.add(track.Track_ID)
+                        }
+                        console.log(tracks_s);
+                        track_id = prompt(`Search Results:\n ${tracks_s} \n Enter a Track ID:`);
+                        if (!track_id || !id_set.has(Number(track_id))) {
+                            alert("Invalid ID");
+                            return;
+                        }
+                        post_res = await addPlaylistContent(addTrackButton.id, track_id)
+                        console.log(post_res)
+
+                    })
+
+                    scrollView = document.createElement('div');
+                    scrollView.classList.add('track-container');
+
+                    tracks.forEach(track => {
+                        trackCard = createTrackCard(track)
+                        // temp = document.createElement('div')
+                        // temp.classList.add("track-card")
+                        // placeholder = document.createElement('p')
+                        // placeholder.textContent = "This is a very long long long long placeholder"
+                        // temp.appendChild(placeholder)
+                        scrollView.appendChild(trackCard)
+                    });
+                    
+                    
+                    name.appendChild(addTrackButton);
+                    playlistList.appendChild(name);
+                    playlistList.appendChild(scrollView);
+                    playlistList.appendChild(document.createElement('br'));
+                };
+            }
+            document.addEventListener('DOMContentLoaded', fetchPlaylists);
+        </script>
+
+    </section>
+
+</main>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const playlistNameInput = document.getElementById('track-playlist-name');
+    const playlistDescInput = document.getElementById('track-description');
+    const playlistCoverImage = document.getElementById('track-cover-image');
+    const createPlaylistBtn = document.getElementById('create-playlist-btn');
+
+    let playlistName = null;
+    const USER_ID = {{ user_id|tojson }};
+
+    createPlaylistBtn.addEventListener('click', async () => {
+
+        const playlistName = playlistNameInput.value.trim();
+        const playlistDesc = playlistDescInput.value.trim();
+        const playlistCovImg = playlistCoverImage.value.trim();
+
+        if (!playlistName) {
+            alert("please enter a playlist name")
+            return;
+        }
+        if (!USER_ID) {
+            alert("please login")
+            return;
+        }
+
+        try {
+            const res = await fetch('/posts/playlist', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    user_id: USER_ID,
+                    Name: playlistName,
+                    Description: playlistDesc,
+                    Cover_Image: playlistCovImg
+                })
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                alert(data.message || 'Error adding playlist.');
+                return;
+            }
+            alert("Playlist created successfully!")
+            window.location.reload();
+        } catch (err) {
+            console.error(err);
+            alert('Error creating playlist.');
+        }
+    });
+
+});
+</script>
+</body>
+</html>

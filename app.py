@@ -5,8 +5,8 @@ import random
 
 DB_CONFIG = {
     "host": "127.0.0.1",
-    "user": "root",
-    "password": "Ginger03.",
+    "user": "",
+    "password": "",
     "database": "SpotSocialDB",
 }
 
@@ -859,6 +859,215 @@ def feed():
     finally:
         cursor.close()
         conn.close()
+
+@app.route("/playlist")
+def playlist():
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect(url_for("login_user"))
+    conn = get_db_connection()
+    if conn is None:
+        return "DB error", 500
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            """
+            SELECT
+                CASE
+                    WHEN User_ID_1 = %s THEN User_ID_2
+                    ELSE User_ID_1
+                END AS Friend_ID
+            FROM Friendships
+            WHERE (User_ID_1 = %s OR User_ID_2 = %s)
+            AND Status = 'Accepted'
+            """,
+            (user_id, user_id, user_id),
+        )
+        rows = cursor.fetchall()
+        friend_ids = [r["Friend_ID"] for r in rows]
+        feed_user_ids = [user_id] + friend_ids
+        if not feed_user_ids:
+            feed_posts = []
+        else:
+            placeholders = ", ".join(["%s"] * len(feed_user_ids))
+            query = f"""
+                SELECT p.Post_ID,
+                    p.Caption,
+                    p.Time,
+                    t.Name AS Track_Name,
+                    t.Artist,
+                    t.Cover_Image,
+                    u.Display_Name,
+                    u.Username,
+                    u.Profile_Picture,
+                    COALESCE(lc.LikeCount, 0) AS Like_Count,
+                    COALESCE(cc.CommentCount, 0) AS Comment_Count
+                FROM Posts p
+                JOIN Tracks t ON p.Track_ID = t.Track_ID
+                JOIN Users u ON p.User_ID = u.User_ID
+                LEFT JOIN (
+                    SELECT Post_ID, COUNT(*) AS LikeCount
+                    FROM Likes
+                    GROUP BY Post_ID
+                ) lc ON p.Post_ID = lc.Post_ID
+                LEFT JOIN (
+                    SELECT Post_ID, COUNT(*) AS CommentCount
+                    FROM Comments
+                    GROUP BY Post_ID
+                ) cc ON p.Post_ID = cc.Post_ID
+                WHERE p.User_ID IN ({placeholders})
+                ORDER BY p.Time DESC
+                LIMIT 50
+            """
+            cursor.execute(query, tuple(feed_user_ids))
+            feed_posts = cursor.fetchall()
+        return render_template("playlist.html", posts=feed_posts, user_id=user_id)
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@app.route("/posts/playlist", methods=["POST"])
+def post_playlist():
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"message": "Not logged in"}), 401
+    data = request.get_json() if request.is_json else request.form
+    Name = data.get("Name", "").strip()
+    Description = data.get("Description", "").strip()
+    Cover_Image = data.get("Cover_Image", "").strip()
+    Is_Favorites = 0
+    if not Name:
+        return jsonify({"message": "Name cannot be empty"}), 400
+    conn = get_db_connection()
+    if conn is None:
+        return jsonify({"message": "DB connection error"}), 500
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT COALESCE(MAX(Playlist_ID), 0) FROM Playlists")
+        max_id = cursor.fetchone()[0]
+        new_playlist_id = max_id + 1
+        cursor.execute(
+            """
+            INSERT INTO Playlists (Playlist_ID, User_ID, Name, Description, Cover_Image, Is_Favorites)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            """,
+            (new_playlist_id, user_id, Name, Description, Cover_Image, Is_Favorites),
+        )
+        conn.commit()
+        return (
+            jsonify(
+                {
+                    "Message": "playlist added"
+                }
+            ),
+            201,
+        )
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"message": f"Error adding playlist: {e}"}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@app.route("/playlist/get", methods=["GET"])
+def get_playlists():
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"message": "Not logged in"}), 401
+
+    conn = get_db_connection()
+    if conn is None:
+        return jsonify({"message": "DB connection error"}), 500
+    
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            SELECT Playlist_ID, Name, Description, Cover_Image, Is_Favorites
+            FROM Playlists
+            WHERE User_ID = %s
+            ORDER BY Is_Favorites DESC, Name ASC;
+            """,
+            (user_id,),
+        )
+        
+        playlists = cursor.fetchall()
+        return playlists
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"message": f"Error adding playlist: {e}"}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route("/playlist/get/contents/tracks/<int:playlist_id>")
+def get_playlist_tracks(playlist_id):
+    conn = get_db_connection()
+    if conn is None:
+        return jsonify({"message": "DB connection error"}), 500
+    
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            SELECT Playlists.Playlist_ID, Tracks.Name, Tracks.Album, Tracks.Cover_Image, Tracks.Artist, Tracks.Year 
+            FROM Playlists
+            JOIN Playlist_Contents ON Playlists.Playlist_ID = Playlist_Contents.Playlist_ID
+            JOIN Tracks ON Playlist_Contents.Track_ID = Tracks.Track_ID
+            WHERE Playlists.Playlist_ID = %s
+            ORDER BY Tracks.Album, Tracks.Name;
+            """,
+            (playlist_id,),
+        )
+        
+        tracks = cursor.fetchall()
+        return tracks
+    except Exception as e:
+        conn.rollback()
+        print(e)
+        return jsonify({"message": f"Error adding playlist: {e}"}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route("/posts/playlist/content", methods=["POST"])
+def post_playlist_content():
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"message": "Not logged in"}), 401
+    data = request.get_json() if request.is_json else request.form
+    Track_ID = data.get("Track_ID", "").strip()
+    Playlist_ID = data.get("Playlist_ID", "").strip()
+    conn = get_db_connection()
+    if conn is None:
+        return jsonify({"message": "DB connection error"}), 500
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            INSERT INTO Playlist_Contents (Playlist_ID, Track_ID)
+            VALUES (%s, %s)
+            """,
+            (Playlist_ID, Track_ID),
+        )
+        conn.commit()
+        return (
+            jsonify(
+                {
+                    "Message": "playlist added"
+                }
+            ),
+            201,
+        )
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"message": f"Error adding playlist: {e}"}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
 
 if __name__ == "__main__":
     print(app.url_map)
