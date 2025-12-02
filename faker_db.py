@@ -63,7 +63,7 @@ def seed_users(cursor, count=10):
                 fake.password(length=10),
                 fake.name(),
                 random.choice(BIOS),
-                "https://picsum.photos/842/741",
+                f"https://randomuser.me/api/portraits/{fake.random_element(['men', 'women'])}/{fake.random_int(0,99)}.jpg",
             )
         )
 
@@ -81,14 +81,16 @@ def seed_tracks(cursor, count=50):
     max_id = get_max_id(cursor, "Tracks", "Track_ID")
     start_id = max_id + 1
     tracks = []
+    
 
     for i in range(count):
+        song_title = fake.word().title()
         tracks.append(
             (
                 start_id + i,
-                fake.word().title(),
+                song_title,
                 " ".join(fake.words(nb=2)).title(),
-                "https://picsum.photos/842/741",
+                f"https://picsum.photos/seed/{song_title}/400/300",
                 fake.name(),
                 random.randint(1990, datetime.now().year),
             )
@@ -110,13 +112,14 @@ def seed_playlists(cursor, user_ids, count=10):
     playlists = []
 
     for i in range(count):
+        mix_name = fake.word().capitalize() + " Mix"
         playlists.append(
             (
                 start_id + i,
                 random.choice(user_ids),
-                fake.word().capitalize() + " Mix",
+                mix_name,
                 random.choice(DESCRIPTIONS),
-                "https://picsum.photos/842/741",
+                f"https://picsum.photos/seed/{mix_name}/400/300",
                 random.choice([True, False]),
             )
         )
