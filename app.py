@@ -1,16 +1,18 @@
 from flask import Flask, request, jsonify, render_template, redirect, url_for, session
+from flask_cors import CORS
 import mysql.connector
 import datetime
 import random
 
 DB_CONFIG = {
     "host": "127.0.0.1",
-    "user": "",
-    "password": "",
+    "user": "root",
+    "password": "Ginger03.",
     "database": "SpotSocialDB",
 }
 
 app = Flask(__name__)
+CORS(app)
 app.secret_key = "change_this_to_a_random_string"
 
 def get_db_connection():
@@ -20,80 +22,6 @@ def get_db_connection():
     except mysql.connector.Error as err:
         print(f"Database connection error: {err}")
         return None
-
-CAPTIONS = [
-    "Mood powered by whatever's playing right now.",
-    "Finding that song that hits different.",
-    "Today's soundtrack on repeat.",
-    "Good music, good energy, good day.",
-    "If it sounds right, it feels right.",
-]
-
-DESCRIPTIONS = [
-    "A collection of songs that match the moment.",
-    "Your soundtrack for calm mornings and easy nights.",
-    "A mix of everything I've had on repeat lately.",
-    "Handpicked tracks for when you just want to feel something.",
-    "Music for focusing, thinking, or just existing.",
-]
-
-def create_demo_content_for_user(user_id: int):
-    conn = get_db_connection()
-    if conn is None:
-        return
-    cur = conn.cursor()
-    try:
-        cur.execute("SELECT Track_ID FROM Tracks")
-        track_ids = [r[0] for r in cur.fetchall()]
-        if not track_ids:
-            print("No tracks in DB, run faker_db.py first.")
-            return
-        cur.execute("SELECT COALESCE(MAX(Post_ID), 0) FROM Posts")
-        next_post_id = cur.fetchone()[0] + 1
-        cur.execute("SELECT COALESCE(MAX(Playlist_ID), 0) FROM Playlists")
-        next_playlist_id = cur.fetchone()[0] + 1
-        now = datetime.datetime.now()
-        posts = []
-        for i in range(3):
-            posts.append(
-                (
-                    next_post_id,
-                    user_id,
-                    random.choice(track_ids),
-                    random.choice(CAPTIONS),
-                    now - datetime.timedelta(minutes=i * 3),
-                )
-            )
-            next_post_id += 1
-        cur.executemany(
-            """
-            INSERT INTO Posts (Post_ID, User_ID, Track_ID, Caption, Time)
-            VALUES (%s, %s, %s, %s, %s)
-            """,
-            posts,
-        )
-        cur.execute(
-            """
-            INSERT INTO Playlists (Playlist_ID, User_ID, Name, Description, Cover_Image, Is_Favorites)
-            VALUES (%s, %s, %s, %s, %s, %s)
-            """,
-            (
-                next_playlist_id,
-                user_id,
-                "My First Mix",
-                random.choice(DESCRIPTIONS),
-                "https://picsum.photos/842/741",
-                False,
-            ),
-        )
-        conn.commit()
-        print(f"Demo content created for user {user_id}")
-    except Exception as e:
-        conn.rollback()
-        print("Error in create_demo_content_for_user:", e)
-    finally:
-        cur.close()
-        conn.close()
 
 @app.route("/register", methods=["POST"])
 def register_user():
@@ -126,7 +54,6 @@ def register_user():
     try:
         cursor.execute(insert_query, (new_user_id, username, password, display_name))
         conn.commit()
-        create_demo_content_for_user(new_user_id)
         if request.is_json:
             return (
                 jsonify(
